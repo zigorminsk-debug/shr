@@ -98,14 +98,11 @@ jobs:
               echo ""
             done
           } > guide/GUIDE-ALL.md
-          cd guide && zip -r "SHR-Guide-${{ github.sha }}.zip" . -x "*.zip"
           ls -lh guide/
 
       - name: Upload guide artifact (saved in Actions)
         uses: actions/upload-artifact@v4
         with:
           name: SHR-Guide-${{ github.sha }}
-          path: |
-            guide/GUIDE-ALL.md
-            guide/SHR-Guide-${{ github.sha }}.zip
+          path: guide/
           retention-days: 365
