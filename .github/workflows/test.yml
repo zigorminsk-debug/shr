@@ -1,0 +1,9 @@
+name: Test-WF
+on:
+  push:
+
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo test
