@@ -1,18 +1,30 @@
 name: Build SHR (Windows)
 
+# Сборка запускается на GitHub Actions сразу после внесения изменений:
+# - push в ЛЮБУЮ ветку (включая arena/...) и теги v*
+# - любой pull request
+# - вручную через Actions → Run workflow (workflow_dispatch)
 on:
   push:
-    branches: [main, master]
     tags: ["v*"]
   pull_request:
-    branches: [main, master]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Ветка для сборки (по умолчанию — текущая)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-windows:
+    name: Build SHR.exe (Windows)
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -38,7 +50,7 @@ jobs:
         run: |
           python -m PyInstaller --noconfirm --clean --onefile --windowed --name SHR src/shr/__main__.py
 
-      - name: Upload artifact
+      - name: Upload SHR.exe artifact
         uses: actions/upload-artifact@v4
         with:
           name: SHR-windows-${{ github.sha }}
@@ -51,3 +63,55 @@ jobs:
         with:
           files: dist/SHR.exe
           generate_release_notes: true
+
+  guide:
+    name: Build & save full guide (Actions artifact)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Assemble full guide package
+        run: |
+          mkdir -p guide/docs
+          cp README.md guide/ 2>/dev/null || true
+          cp GUIDE.md guide/ 2>/dev/null || true
+          cp -r docs/* guide/docs/ 2>/dev/null || true
+          cp -r .github/workflows guide/docs/workflows 2>/dev/null || true
+          {
+            echo "# SHR — Полный гайд (сводный файл, собран в GitHub Actions)"
+            echo ""
+            echo "Собрано: $(date -u '+%Y-%m-%d %H:%M UTC') · commit: ${{ github.sha }} · ref: ${{ github.ref }}"
+            echo ""
+            echo "---"
+            echo ""
+            cat GUIDE.md 2>/dev/null || cat README.md
+            echo ""
+            echo "---"
+            echo ""
+            echo "## Приложение: README.md"
+            echo ""
+            cat README.md 2>/dev/null || true
+            echo ""
+            echo "---"
+            echo ""
+            for f in docs/*.md; do
+              echo "## $f"
+              echo ""
+              cat "$f" 2>/dev/null || true
+              echo ""
+              echo "---"
+              echo ""
+            done
+          } > guide/GUIDE-ALL.md
+          cd guide && zip -r "SHR-Guide-${{ github.sha }}.zip" . -x "*.zip"
+          ls -lh guide/
+
+      - name: Upload guide artifact (saved in Actions)
+        uses: actions/upload-artifact@v4
+        with:
+          name: SHR-Guide-${{ github.sha }}
+          path: |
+            guide/GUIDE-ALL.md
+            guide/SHR-Guide-${{ github.sha }}.zip
+          retention-days: 365

@@ -1,10 +1,10 @@
 name: CI
 
+# Тесты на каждый push в любую ветку и каждый PR
 on:
   push:
-    branches: [main, master]
   pull_request:
-    branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   test:
