@@ -1,19 +1,13 @@
 name: Build SHR (Windows)
 
 # Сборка запускается на GitHub Actions сразу после внесения изменений:
-# - push в ЛЮБУЮ ветку (включая arena/...) и теги v*
+# - push в ЛЮБУЮ ветку (bare push — без фильтра, включает arena/... и теги v*)
 # - любой pull request
-# - вручную через Actions → Run workflow (workflow_dispatch)
+# - вручную через Actions → Run workflow
 on:
   push:
-    tags: ["v*"]
   pull_request:
   workflow_dispatch:
-    inputs:
-      ref:
-        description: "Ветка для сборки (по умолчанию — текущая)"
-        required: false
-        default: ""
 
 permissions:
   contents: write
