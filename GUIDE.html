@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHR — Полный гайд по программе</title>
+<style>
+  :root {
+    --bg: #0f1420; --bg2: #161d2b; --bg3: #1e2737;
+    --fg: #e8edf6; --muted: #9aa7bd; --accent: #4da3ff; --accent2: #7ee0c8;
+    --ok: #4ade80; --warn: #fbbf24; --err: #f87171;
+    --code-bg: #0b0f18; --border: #2a3548;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.65;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .layout { display: flex; min-height: 100vh; }
+  /* Sidebar */
+  nav {
+    width: 290px; flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border);
+    padding: 22px 16px; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  nav h1 { font-size: 18px; margin: 0 0 4px; color: var(--accent2); }
+  nav .ver { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+  nav ul { list-style: none; margin: 0; padding: 0; }
+  nav li { margin: 2px 0; }
+  nav a { display: block; color: var(--muted); padding: 6px 10px; border-radius: 8px; font-size: 14px; }
+  nav a:hover { background: var(--bg3); color: var(--fg); text-decoration: none; }
+  nav a.active { background: var(--accent); color: #fff; }
+  /* Content */
+  main { flex: 1; max-width: 960px; padding: 36px 44px 120px; }
+  header.hero {
+    background: linear-gradient(135deg, #1c2a44 0%, #16202f 100%);
+    border: 1px solid var(--border); border-radius: 14px; padding: 28px 30px; margin-bottom: 30px;
+  }
+  header.hero h1 { margin: 0 0 8px; font-size: 28px; }
+  header.hero p { margin: 0; color: var(--muted); }
+  .badges { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 999px;
+    padding: 4px 12px; font-size: 12px; color: var(--accent2);
+  }
+  h2 { margin-top: 52px; padding-bottom: 8px; border-bottom: 1px solid var(--border); font-size: 22px; }
+  h3 { margin-top: 34px; font-size: 17px; color: var(--accent); }
+  h4 { margin-top: 24px; font-size: 15px; color: var(--accent2); }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--bg3); color: var(--accent2); }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  code, pre {
+    font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+    font-size: 13.5px;
+  }
+  code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px; overflow-x: auto; margin: 14px 0;
+  }
+  pre code { border: none; background: none; padding: 0; }
+  .card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 20px; margin: 14px 0;
+  }
+  .note { border-left: 4px solid var(--warn); background: rgba(251,191,36,0.06); }
+  .oknote { border-left: 4px solid var(--ok); background: rgba(74,222,128,0.06); }
+  .danger { border-left: 4px solid var(--err); background: rgba(248,113,113,0.06); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+  .grid .card { margin: 0; }
+  .step {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 18px; margin: 14px 0;
+  }
+  .step b.num {
+    display: inline-flex; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #fff; align-items: center; justify-content: center;
+    font-size: 14px; margin-right: 10px;
+  }
+  footer { margin-top: 60px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); padding-top: 18px; }
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    nav { position: static; width: 100%; height: auto; }
+    main { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav>
+  <h1>SHR</h1>
+  <div class="ver">Полный гайд · v1.0.0</div>
+  <ul>
+    <li><a href="#what">1. Что такое SHR</a></li>
+    <li><a href="#requirements">2. Требования</a></li>
+    <li><a href="#install">3. Установка</a></li>
+    <li><a href="#pat">4. Создание PAT</a></li>
+    <li><a href="#first">5. Первый запуск</a></li>
+    <li><a href="#approval">6. Очередь подтверждения</a></li>
+    <li><a href="#runner">7. Подключение runner'а</a></li>
+    <li><a href="#tabs">8. Вкладки и функции</a></li>
+    <li><a href="#possibilities">9. Возможности связки</a></li>
+    <li><a href="#automation">10. Автоматизация</a></li>
+    <li><a href="#actions">11. Сборка в Actions</a></li>
+    <li><a href="#security">12. Безопасность</a></li>
+    <li><a href="#architecture">13. Архитектура</a></li>
+    <li><a href="#api">14. Справочник API</a></li>
+    <li><a href="#faq">15. FAQ</a></li>
+    <li><a href="#checklist">16. Чек-лист</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<header class="hero">
+  <h1>SHR — Полный гайд по программе</h1>
+  <p>Windows GUI-приложение для подключения компьютера к GitHub через self-hosted runner. Все операции выполняются только через очередь запросов с подтверждением пользователя.</p>
+  <div class="badges">
+    <span class="badge">Windows 10/11</span>
+    <span class="badge">PAT · DPAPI</span>
+    <span class="badge">Очередь подтверждения</span>
+    <span class="badge">GitHub Actions</span>
+    <span class="badge">tkinter</span>
+  </div>
+</header>
+
+<h2 id="what">1. Что такое SHR и зачем он нужен</h2>
+<p><strong>GitHub Actions</strong> — система CI/CD от GitHub. По умолчанию workflow'ы выполняются на облачных машинах GitHub. <strong>Self-hosted runner</strong> — это ваш компьютер, который сам выполняет workflow'ы GitHub Actions. Зачем это нужно:</p>
+<ul>
+  <li><strong>Бесплатные минуты</strong> — облачные минуты GitHub ограничены; свой ПК безлимитен.</li>
+  <li><strong>Windows-специфика</strong> — сборка .NET, PyInstaller, MSVC, доступ к локальным ресурсам.</li>
+  <li><strong>Приватность</strong> — код и артефакты не покидают ваш компьютер.</li>
+  <li><strong>Контроль</strong> — вы решаете, когда и что запускать.</li>
+</ul>
+<p><strong>SHR</strong> — графический интерфейс для управления этим подключением:</p>
+<ul>
+  <li>Подключается к GitHub по <strong>API-ключу (PAT)</strong>.</li>
+  <li>Скачивает, регистрирует и запускает runner'а на вашем ПК.</li>
+  <li>Управляет репозиториями, Actions, issues, секретами — <strong>но только через очередь запросов</strong>: каждый запрос к GitHub ждёт вашего разрешения.</li>
+  <li>Собирается автоматически на GitHub Actions при каждом изменении кода.</li>
+</ul>
+
+<h2 id="requirements">2. Требования</h2>
+<table>
+  <tr><th>Компонент</th><th>Требование</th></tr>
+  <tr><td>ОС</td><td>Windows 10/11 (64-bit). Код работает и на Linux/macOS для отладки, но runner'а и DPAPI — Windows-специфичны</td></tr>
+  <tr><td>Python</td><td>3.10+ (только для запуска из исходников; для готового EXE не нужен)</td></tr>
+  <tr><td>GitHub</td><td>Аккаунт + репозиторий (или организация)</td></tr>
+  <tr><td>Права PAT</td><td><code>repo</code>, <code>workflow</code>, <code>admin:org</code> (для org-runner'ов)</td></tr>
+  <tr><td>Администратор</td><td>Нужен только для установки службы Windows (<code>svc.cmd install</code>)</td></tr>
+  <tr><td>Интернет</td><td>Доступ к <code>api.github.com</code> и <code>github.com</code></td></tr>
+</table>
+
+<h2 id="install">3. Установка</h2>
+
+<h3>Вариант А — готовый EXE (рекомендуется)</h3>
+<ol>
+  <li>Откройте репозиторий на GitHub → вкладка <strong>Actions</strong>.</li>
+  <li>Выберите последний успешный запуск <strong>Build SHR (Windows)</strong>.</li>
+  <li>Внизу страницы — <strong>Artifacts</strong> → скачайте <code>SHR-windows-&lt;sha&gt;</code> (ZIP с <code>SHR.exe</code>).</li>
+  <li>Распакуйте и запустите <code>SHR.exe</code>. Python на ПК не нужен.</li>
+  <li>Если в репозитории есть <strong>Releases</strong> (тег <code>v*</code>) — скачайте EXE оттуда.</li>
+</ol>
+
+<h3>Вариант Б — сборка локально (Windows)</h3>
+<pre><code>git clone https://github.com/zigorminsk-debug/shr.git
+cd shr
+.\scripts\build.ps1
+# Результат: dist\SHR.exe</code></pre>
+<p>Или вручную:</p>
+<pre><code>pip install -r requirements.txt
+python -m PyInstaller --noconfirm --clean --onefile --windowed --name SHR src/shr/__main__.py</code></pre>
+
+<h3>Вариант В — запуск из исходников (для разработчиков)</h3>
+<pre><code>pip install -r requirements.txt
+$env:PYTHONPATH="src"
+python -m shr</code></pre>
+
+<h3>Проверка установки</h3>
+<ul>
+  <li>Окно SHR открылось, видны 9 вкладок.</li>
+  <li>Вкладка «Дашборд» показывает hostname и ОС.</li>
+  <li>Лог: «SHR запущен», «GUI инициализирован».</li>
+</ul>
+
+<h2 id="pat">4. Создание Personal Access Token (PAT)</h2>
+
+<h3>Classic PAT (проще)</h3>
+<ol>
+  <li>GitHub → <strong>Settings</strong> → <strong>Developer settings</strong> → <strong>Personal access tokens</strong> → <strong>Tokens (classic)</strong> → <strong>Generate new token (classic)</strong>.</li>
+  <li>Note: <code>SHR-runner</code> (любое имя).</li>
+  <li>Expiration: 90 дней или без срока (рекомендуется 90 дней с напоминанием).</li>
+  <li>Scopes (отметьте):
+    <ul>
+      <li>✅ <code>repo</code> — репозитории, runner'ы, Actions, секреты.</li>
+      <li>✅ <code>workflow</code> — запуск workflow_dispatch.</li>
+      <li>✅ <code>admin:org</code> — регистрация runner'а на уровне организации.</li>
+      <li>✅ <code>read:org</code> — чтение организаций.</li>
+    </ul>
+  </li>
+  <li><strong>Generate token</strong> → скопируйте <code>ghp_...</code> (показывается один раз!).</li>
+</ol>
+
+<h3>Fine-grained PAT (строже, рекомендуется для продакшена)</h3>
+<ol>
+  <li><strong>Personal access tokens</strong> → <strong>Fine-grained tokens</strong> → <strong>Generate new token</strong>.</li>
+  <li>Repository access: только нужные репозитории.</li>
+  <li>Repository permissions: Actions (Read and write), Administration (Read and write), Contents (Read and write), Issues (Read and write), Pull requests (Read and write).</li>
+  <li>Organization permissions: <strong>Self-hosted runners</strong> — Read and write.</li>
+</ol>
+
+<h3>Куда вводить токен</h3>
+<p>SHR → вкладка <strong>Настройки</strong> → поле «Personal Access Token» → <strong>Сохранить токен</strong>.</p>
+<div class="note note"><strong>Важно:</strong> токен хранится <strong>зашифрованным DPAPI</strong> в <code>%APPDATA%\SHR\token.dat</code> — расшифровать его может только текущий пользователь Windows. В <code>config.json</code> токен не сохраняется.</div>
+
+<h2 id="first">5. Первый запуск и настройка</h2>
+<ol>
+  <li>Запустите SHR.</li>
+  <li>Перейдите в <strong>Настройки</strong>:
+    <ul>
+      <li>Вставьте PAT → «Сохранить токен» (лог: «Токен GitHub сохранён (DPAPI)»).</li>
+      <li><strong>Владелец (owner)</strong> — ваш логин или организация.</li>
+      <li><strong>Репозиторий</strong> — имя репозитория по умолчанию.</li>
+      <li><strong>Имя runner'а</strong> — по умолчанию hostname ПК.</li>
+      <li><strong>Метки</strong> — по умолчанию <code>self-hosted,windows,x64</code>.</li>
+      <li><strong>Папка runner'а</strong> — по умолчанию <code>C:\Program Files\GitHub Runner</code>.</li>
+      <li>«Сохранить настройки».</li>
+    </ul>
+  </li>
+  <li>Нажмите <strong>«Проверить подключение»</strong> (верхняя панель).</li>
+  <li>Перейдите во вкладку <strong>Запросы</strong> → увидите запрос «Проверка подключения (GET /user)» со статусом PENDING.</li>
+  <li>Нажмите <strong>«Разрешить выбранный»</strong> → запрос исполнится → статус DONE, верхняя панель покажет «Подключено как &lt;login&gt;».</li>
+</ol>
+<div class="note"><strong>Если токен не задан</strong>, SHR предупредит и не создаст запросы до ввода PAT.</div>
+
+<h2 id="approval">6. Как работает очередь подтверждения запросов</h2>
+<p>Это ключевая защита SHR. Схема:</p>
+<pre><code>Вы нажимаете кнопку в GUI
+        │
+        ▼
+ApprovalRequest создаётся (PENDING) ──► виден во вкладке «Запросы»
+        │
+        ├── «Разрешить» ──► APPROVED ──► RequestExecutor (фоновый поток)
+        │                                   │ GitHubClient.request()
+        │                                   ▼
+        │                              DONE (результат) / FAILED (ошибка)
+        │
+        └── «Отклонить» ──► REJECTED (запрос никогда не отправится в сеть)</code></pre>
+
+<h3>Статусы запроса</h3>
+<table>
+  <tr><th>Статус</th><th>Значение</th></tr>
+  <tr><td><code>PENDING</code></td><td>Ждёт вашего решения</td></tr>
+  <tr><td><code>APPROVED</code></td><td>Разрешён, ждёт исполнения</td></tr>
+  <tr><td><code>EXECUTING</code></td><td>Исполняется прямо сейчас</td></tr>
+  <tr><td><code>DONE</code></td><td>Успешно исполнен (результат в деталях)</td></tr>
+  <tr><td><code>FAILED</code></td><td>Ошибка API/сети (текст ошибки в деталях)</td></tr>
+  <tr><td><code>REJECTED</code></td><td>Отклонён вами</td></tr>
+  <tr><td><code>EXPIRED</code></td><td>Просрочен (PENDING дольше 5 минут)</td></tr>
+</table>
+
+<h3>Кнопки вкладки «Запросы»</h3>
+<ul>
+  <li><strong>Разрешить выбранный</strong> — исполнить один запрос.</li>
+  <li><strong>Отклонить выбранный</strong> — отменить один запрос.</li>
+  <li><strong>Разрешить все безопасные</strong> — все GET-запросы разом.</li>
+  <li><strong>Отклонить все ожидающие</strong> — отменить всё.</li>
+  <li><strong>Очистить завершённые</strong> — убрать DONE/FAILED/REJECTED/EXPIRED из списка.</li>
+  <li><strong>Обновить</strong> — перечитать список.</li>
+</ul>
+
+<h3>Детальные сведения о запросе</h3>
+<p>При выборе строки внизу показываются: заголовок, метод, URL, описание, статус, флаги (безопасный/деструктивный), payload, результат или ошибка.</p>
+
+<h3>Настройки авто-разрешения (Настройки → Безопасность)</h3>
+<ul>
+  <li><strong>Авто-разрешать GET</strong> — чтение без подтверждения (выключено по умолчанию).</li>
+  <li><strong>Авто-разрешать не-деструктивные</strong> — всё, кроме DELETE (выключено по умолчанию).</li>
+</ul>
+<div class="oknote"><strong>По умолчанию ВСЕ запросы требуют подтверждения</strong> — это и есть смысл приложения.</div>
+
+<h2 id="runner">7. Пошаговое подключение self-hosted runner'а</h2>
+
+<div class="step"><b class="num">1</b><strong>Скачайте runner</strong>
+<p>Вкладка <strong>Runner</strong> → «Скачать runner (latest)» → подтвердите запрос во вкладке «Запросы».</p>
+<p>Что происходит:</p>
+<ol>
+  <li><code>GET /repos/actions/runner/releases/latest</code> — SHR узнаёт версию и ассеты.</li>
+  <li>Выбирается ассет по ОС/архитектуре: <code>actions-runner-win-x64.zip</code> (Windows).</li>
+  <li>ZIP скачивается и распаковывается в папку runner'а (прогресс-бар).</li>
+</ol>
+<p>Альтернатива: «Скачать по URL…» — вставьте прямую ссылку на ZIP/TAR.GZ.</p>
+</div>
+
+<div class="step"><b class="num">2</b><strong>Получите токен регистрации</strong>
+<p>Выберите уровень:</p>
+<table>
+  <tr><th>Уровень</th><th>Кнопка</th><th>API</th></tr>
+  <tr><td>Репозиторий</td><td>«Получить токен регистрации (repo)»</td><td><code>POST /repos/{owner}/{repo}/actions/runners/registration-token</code></td></tr>
+  <tr><td>Организация</td><td>«Получить токен регистрации (org)»</td><td><code>POST /orgs/{org}/actions/runners/registration-token</code></td></tr>
+  <tr><td>Эфемерный (JIT)</td><td>«JIT-токен»</td><td><code>POST /repos/{owner}/{repo}/actions/runners/generate-jitconfig</code></td></tr>
+</table>
+<p>Токен действителен ~1 час. SHR покажет его в диалоге — скопируйте.</p>
+</div>
+
+<div class="step"><b class="num">3</b><strong>Зарегистрируйте локально</strong>
+<p>«Зарегистрировать локально…» → вставьте токен → имя → метки → SHR выполнит:</p>
+<pre><code>config.cmd --token &lt;TOKEN&gt; --name &lt;NAME&gt; --labels self-hosted,windows,x64 --work _work --runasservice --unattended</code></pre>
+</div>
+
+<div class="step"><b class="num">4</b><strong>Служба Windows</strong>
+<table>
+  <tr><th>Кнопка</th><th>Команда</th></tr>
+  <tr><td>Установить службу</td><td><code>svc.cmd install</code></td></tr>
+  <tr><td>Запустить</td><td><code>svc.cmd start</code></td></tr>
+  <tr><td>Остановить</td><td><code>svc.cmd stop</code></td></tr>
+  <tr><td>Перезапустить</td><td><code>svc.cmd stop</code> + <code>svc.cmd start</code></td></tr>
+  <tr><td>Удалить службу</td><td><code>svc.cmd uninstall</code></td></tr>
+</table>
+<div class="note"><strong>Запустите SHR от администратора</strong> для установки службы. Проверка: <code>sc query actions.runner</code> в командной строке.</div>
+<p>Альтернатива без службы: «Запуск вручную (foreground)» → <code>run.cmd</code> (runner работает, пока открыто окно SHR).</p>
+</div>
+
+<div class="step"><b class="num">5</b><strong>Проверка</strong>
+<ol>
+  <li>Дашборд → «Список runner'ов (repo)» — ваш ПК должен быть <code>online</code>.</li>
+  <li>На GitHub: <strong>Repo → Settings → Actions → Runners</strong> — зелёный статус.</li>
+  <li>Запустите workflow с <code>runs-on: [self-hosted, windows]</code> — job выполнится на вашем ПК.</li>
+</ol>
+</div>
+
+<div class="step"><b class="num">6</b><strong>Удаление runner'а (полный цикл)</strong>
+<ol>
+  <li>«Остановить» службу.</li>
+  <li>«Удалить службу» (<code>svc.cmd uninstall</code>).</li>
+  <li>«Снять регистрацию» (<code>config.cmd remove</code>).</li>
+  <li>«Удалить runner с GitHub (по ID)» → <code>DELETE /repos/{owner}/{repo}/actions/runners/{id}</code>.</li>
+</ol>
+</div>
+
+<h2 id="tabs">8. Описание всех вкладок и функций</h2>
+
+<div class="card"><h3>8.1 Дашборд</h3>
+<ul>
+  <li><strong>Карточки</strong>: токен (задан/не задан), локальный runner (установлен/нет), система (hostname, ОС, архитектура), rate limit (осталось запросов).</li>
+  <li><strong>Быстрые действия</strong>: «Обновить статус», «Список runner'ов (repo)», «Rate limit», «Открыть папку runner'а».</li>
+  <li><strong>Лог</strong> — последние операции.</li>
+</ul>
+</div>
+
+<div class="card"><h3>8.2 Runner</h3>
+<p>Полный жизненный цикл runner'а (см. раздел 7): скачивание, токены (repo/org/JIT), регистрация, служба, foreground, удаление. Статусная строка показывает: установлен, имя, метки, служба (запущена/установлена/нет).</p>
+</div>
+
+<div class="card"><h3>8.3 Репозитории</h3>
+<ul>
+  <li>«Мои репозитории» — <code>GET /user/repos</code>.</li>
+  <li>«Репозитории владельца…» — <code>GET /users/{owner}/repos</code>.</li>
+  <li>«Создать репозиторий…» — <code>POST /user/repos</code> (с выбором приватности).</li>
+  <li>«Клонировать (git)…» — локальный <code>git clone</code> в выбранную папку.</li>
+  <li>Таблица: имя, язык, звёзды, дата обновления.</li>
+</ul>
+</div>
+
+<div class="card"><h3>8.4 Actions</h3>
+<ul>
+  <li>«Workflows» — <code>GET /repos/{o}/{r}/actions/workflows</code>.</li>
+  <li>«Запуски (runs)» — <code>GET /repos/{o}/{r}/actions/runs</code>.</li>
+  <li>«Запустить workflow…» — <code>POST .../workflows/{wf}/dispatches</code> (файл + ветка).</li>
+  <li>«Отменить последний запуск» — <code>POST .../runs/{id}/cancel</code>.</li>
+  <li>«Перезапустить failed jobs» — <code>POST .../runs/{id}/rerun-failed-jobs</code>.</li>
+  <li>Таблица: workflow, статус, вывод, ветка, дата.</li>
+</ul>
+</div>
+
+<div class="card"><h3>8.5 Issues / PR</h3>
+<ul>
+  <li>«Issues (open)» — <code>GET /repos/{o}/{r}/issues</code>.</li>
+  <li>«PR (open)» — <code>GET /repos/{o}/{r}/pulls</code>.</li>
+  <li>«Создать issue…» — <code>POST /repos/{o}/{r}/issues</code> (заголовок + описание).</li>
+  <li>Таблица: номер, заголовок, автор, дата.</li>
+</ul>
+</div>
+
+<div class="card"><h3>8.6 Секреты</h3>
+<ul>
+  <li>«Список секретов» — <code>GET /repos/{o}/{r}/actions/secrets</code>.</li>
+  <li>«Добавить секрет…» — два запроса: <code>GET .../secrets/public-key</code> → NaCl-шифрование → <code>PUT .../secrets/{name}</code>. Значение никогда не передаётся открытым текстом.</li>
+</ul>
+</div>
+
+<div class="card"><h3>8.7 Запросы</h3>
+<p>Центральная вкладка подтверждения (см. раздел 6).</p>
+</div>
+
+<div class="card"><h3>8.8 Логи</h3>
+<ul>
+  <li>Общий журнал всех операций (GUI).</li>
+  <li>«Очистить» — очистить панель.</li>
+  <li>«Открыть файл лога» — <code>%APPDATA%\SHR\shr.log</code>.</li>
+</ul>
+</div>
+
+<div class="card"><h3>8.9 Настройки</h3>
+<ul>
+  <li>PAT (сохраняется в DPAPI).</li>
+  <li>Owner/repo по умолчанию.</li>
+  <li>Имя/метки/папка runner'а.</li>
+  <li>Авто-разрешения безопасности.</li>
+</ul>
+</div>
+
+<h2 id="possibilities">9. Все возможности связки «компьютер ↔ GitHub»</h2>
+
+<h3>Реализовано в SHR</h3>
+<table>
+  <tr><th>#</th><th>Возможность</th><th>Как</th></tr>
+  <tr><td>1</td><td>Подключение по PAT</td><td>DPAPI-токен, проверка <code>GET /user</code></td></tr>
+  <tr><td>2</td><td>Скачивание runner'а</td><td>Latest release, выбор ассета по ОС/архитектуре</td></tr>
+  <tr><td>3</td><td>Регистрация runner'а</td><td>Repo/org/JIT токены + <code>config.cmd</code></td></tr>
+  <tr><td>4</td><td>Служба Windows</td><td><code>svc.cmd</code> install/start/stop/restart/uninstall</td></tr>
+  <tr><td>5</td><td>Foreground-запуск</td><td><code>run.cmd</code> без службы</td></tr>
+  <tr><td>6</td><td>Список runner'ов</td><td>Repo и org уровни</td></tr>
+  <tr><td>7</td><td>Удаление runner'а</td><td>Локально + <code>DELETE</code> на GitHub</td></tr>
+  <tr><td>8</td><td>Репозитории</td><td>Список, создание, клонирование</td></tr>
+  <tr><td>9</td><td>Actions</td><td>Workflows, запуски, trigger, cancel, rerun</td></tr>
+  <tr><td>10</td><td>Issues/PR</td><td>Список, создание issue</td></tr>
+  <tr><td>11</td><td>Секреты</td><td>Список, NaCl-шифрование, запись</td></tr>
+  <tr><td>12</td><td>Rate limit</td><td>Мониторинг лимита API</td></tr>
+  <tr><td>13</td><td>Логи и аудит</td><td>Каждый запрос виден и записан</td></tr>
+  <tr><td>14</td><td>Системная информация</td><td>Hostname, ОС, CPU, RAM, диск</td></tr>
+</table>
+
+<h3>Доступно через API-клиент (можно добавить в GUI)</h3>
+<ul>
+  <li>Релизы: список, создание, загрузка ассетов (<code>GET/POST /repos/{o}/{r}/releases</code>).</li>
+  <li>Runner groups (org): <code>GET/POST /orgs/{org}/actions/runner-groups</code>.</li>
+  <li>Webhooks: <code>GET/POST /repos/{o}/{r}/hooks</code>.</li>
+  <li>Environments: <code>GET /repos/{o}/{r}/environments</code>.</li>
+  <li>Файлы репозитория: <code>GET /repos/{o}/{r}/contents/{path}</code>.</li>
+  <li>Git-операции: pull/push/status/log/checkout (модуль <code>git_ops.py</code> готов).</li>
+</ul>
+
+<h2 id="automation">10. Что можно автоматизировать</h2>
+
+<h3>10.1 Локальный CI/CD (главное)</h3>
+<p>Workflow выполняется на вашем ПК:</p>
+<pre><code>jobs:
+  build:
+    runs-on: [self-hosted, windows]
+    steps:
+      - uses: actions/checkout@v4
+      - run: .\scripts\build.ps1
+      - uses: actions/upload-artifact@v4
+        with: { name: SHR, path: dist/SHR.exe }</code></pre>
+<p>В <code>build.yml</code> этого репозитория замените <code>runs-on: windows-latest</code> на <code>runs-on: [self-hosted, windows]</code> — и SHR будет собираться на вашем компьютере.</p>
+
+<h3>10.2 Эфемерные (JIT) runner'ы</h3>
+<p>JIT-токен → runner на один запуск → сам удаляется. Для масштабирования и безопасности (нет постоянного runner'а).</p>
+
+<h3>10.3 Массовое развёртывание</h3>
+<pre><code>scripts/install_runner.ps1 -Token &lt;t&gt; -Name &lt;pc&gt; -Labels "self-hosted,windows"</code></pre>
+<p>Установка на нескольких ПК без GUI.</p>
+
+<h3>10.4 Управление через GUI</h3>
+<p>Создание репозиториев, секретов, issue, запуск workflow — всё через очередь подтверждения, с аудитом в логе.</p>
+
+<h3>10.5 Мониторинг Actions</h3>
+<p>Статусы запусков, отмена зависших, перезапуск упавших — без браузера.</p>
+
+<h3>10.6 Идеи расширения</h3>
+<ul>
+  <li>Runner groups, webhooks, releases с ассетами, environments.</li>
+  <li>Файловый браузер репозитория (contents API).</li>
+  <li>Git pull/push из GUI.</li>
+  <li>Tray-режим + автозапуск Windows.</li>
+  <li>Уведомления Telegram/Discord о завершении workflow.</li>
+  <li>Мульти-профили токенов.</li>
+</ul>
+
+<h2 id="actions">11. Сборка через GitHub Actions (все действия задокументированы)</h2>
+
+<h3>11.1 Файлы workflow</h3>
+<table>
+  <tr><th>Файл</th><th>Назначение</th></tr>
+  <tr><td><code>.github/workflows/build.yml</code></td><td>Сборка <code>SHR.exe</code> (Windows) + артефакт гайда + релиз по тегу</td></tr>
+  <tr><td><code>.github/workflows/ci.yml</code></td><td>Тесты на Ubuntu при каждом push/PR</td></tr>
+</table>
+
+<h3>11.2 Триггеры (когда запускается сборка)</h3>
+<p><strong>build.yml:</strong></p>
+<pre><code>on:
+  push:            # любой push в любую ветку + теги v*
+  pull_request:    # любой PR
+  workflow_dispatch:  # ручной запуск (кнопка Actions → Run workflow)</code></pre>
+<p><strong>ci.yml:</strong></p>
+<pre><code>on:
+  push:            # любой push
+  pull_request:    # любой PR</code></pre>
+<div class="note"><strong>Важно:</strong> workflow-файлы должны существовать на ветке, где происходит событие. Поэтому триггеры настроены <strong>без фильтра веток</strong> — сборка запускается и на ветке <code>arena/...</code>, и на <code>main</code>.</div>
+
+<h3>11.3 Job build-windows (пошагово)</h3>
+<ol>
+  <li><strong>Checkout</strong> — <code>actions/checkout@v4</code>: скачивание кода.</li>
+  <li><strong>Set up Python</strong> — <code>actions/setup-python@v5</code>, Python 3.12, кэш pip.</li>
+  <li><strong>Install dependencies</strong> — <code>pip install -r requirements.txt</code>.</li>
+  <li><strong>Run tests</strong> — <code>pip install pytest responses</code> → <code>python -m pytest tests/ -v</code> (16 тестов).</li>
+  <li><strong>Build SHR.exe</strong> — <code>PyInstaller --onefile --windowed --name SHR src/shr/__main__.py</code>.</li>
+  <li><strong>Upload artifact</strong> — <code>actions/upload-artifact@v4</code>: <code>SHR.exe</code> на 90 дней, имя <code>SHR-windows-&lt;sha&gt;</code>.</li>
+  <li><strong>Create release on tag</strong> — если тег <code>v*</code>: <code>softprops/action-gh-release@v2</code> публикует <code>SHR.exe</code> в Releases с автогенерацией описания.</li>
+</ol>
+
+<h3>11.4 Job guide (сохранение гайда в Actions)</h3>
+<ol>
+  <li><strong>Checkout</strong> — скачивание кода.</li>
+  <li><strong>Assemble full guide package</strong> — собирается полный HTML-гайд <code>GUIDE.html</code> и копируется в <code>guide/</code> (гайд + все документы).</li>
+  <li><strong>Upload guide artifact</strong> — <code>actions/upload-artifact@v4</code>: артефакт <code>SHR-Guide-&lt;sha&gt;</code> на 365 дней.</li>
+</ol>
+<div class="oknote">Итог: после каждой сборки в Actions доступны <strong>два артефакта</strong>: <code>SHR-windows-&lt;sha&gt;</code> (EXE) и <code>SHR-Guide-&lt;sha&gt;</code> (полный гайд — HTML-страница + все документы).</div>
+
+<h3>11.5 Как запустить сборку вручную</h3>
+<ol>
+  <li>GitHub → репозиторий → <strong>Actions</strong> → <strong>Build SHR (Windows)</strong> → <strong>Run workflow</strong>.</li>
+  <li>Выберите ветку → <strong>Run workflow</strong>.</li>
+  <li>Дождитесь зелёного статуса → скачайте артефакты внизу страницы.</li>
+</ol>
+<p>Или через CLI:</p>
+<pre><code>gh workflow run build.yml --ref &lt;ветка&gt;
+gh run watch</code></pre>
+
+<h3>11.6 Как проверить, что сборка запустилась</h3>
+<pre><code>gh run list --limit 5
+gh run view &lt;run-id&gt;</code></pre>
+<p>Или в браузере: <strong>Actions</strong> → список запусков (статус: queued → in_progress → completed).</p>
+
+<h2 id="security">12. Безопасность</h2>
+<ul>
+  <li><strong>PAT зашифрован DPAPI</strong> (<code>CryptProtectData</code>) — расшифровка только текущим пользователем Windows. Файл: <code>%APPDATA%\SHR\token.dat</code> (права 0600).</li>
+  <li><strong>Все API-вызовы — через очередь подтверждения.</strong> Без разрешения пользователя запрос не отправится.</li>
+  <li><strong>Деструктивные операции</strong> (DELETE) требуют отдельного подтверждения.</li>
+  <li><strong>Секреты шифруются NaCl sealed box</strong> по публичному ключу GitHub — значение никогда не передаётся открытым текстом.</li>
+  <li><strong>Логи не содержат токен</strong> (маскируется как <code>ghp_…abcd</code>).</li>
+</ul>
+<div class="note"><strong>Рекомендации:</strong>
+  <ul>
+    <li>Используйте fine-grained PAT с минимальными правами.</li>
+    <li>Не коммитьте токены в репозиторий.</li>
+    <li>Запускайте SHR от администратора только при установке службы.</li>
+    <li>Для публичных репозиториев предпочитайте JIT runner'ы постоянным.</li>
+  </ul>
+</div>
+
+<h2 id="architecture">13. Архитектура программы</h2>
+<pre><code>src/shr/
+├── __main__.py          # python -m shr
+├── app.py               # SHRApp + RequestExecutor (фоновый поток)
+├── config.py            # настройки, пути %APPDATA%\SHR
+├── secure_store.py      # DPAPI-шифрование PAT
+├── approval_queue.py    # очередь запросов с подтверждением
+├── github_client.py     # REST API клиент (requests)
+├── runner_manager.py    # скачивание/регистрация/служба runner'а
+├── git_ops.py           # локальные git-операции
+├── system_info.py       # CPU/RAM/диск/hostname
+└── ui/
+    ├── main_window.py   # все вкладки GUI (tkinter)
+    └── widgets.py       # LogView, StatusCard, диалоги</code></pre>
+<p>Поток данных: GUI → <code>api_request()</code> → <code>ApprovalQueue</code> → (подтверждение) → <code>RequestExecutor</code> → <code>GitHubClient</code> → результат → callback в GUI.</p>
+<p>Зависимости: <code>requests</code>, <code>PyNaCl</code>, <code>psutil</code>, <code>Pillow</code>, <code>pystray</code>, <code>PyInstaller</code>.</p>
+<p>Тесты: <code>tests/</code> — 16 тестов (очередь, API-моки через <code>responses</code>, DPAPI, runner). Запуск: <code>python -m pytest tests/ -v</code>.</p>
+
+<h2 id="api">14. Справочник API-эндпоинтов</h2>
+<p>Все вызовы — через ApprovalQueue.</p>
+<table>
+  <tr><th>Метод</th><th>Путь</th><th>Назначение</th></tr>
+  <tr><td>GET</td><td><code>/user</code></td><td>Проверка токена</td></tr>
+  <tr><td>GET</td><td><code>/rate_limit</code></td><td>Лимит запросов</td></tr>
+  <tr><td>GET</td><td><code>/user/repos</code></td><td>Мои репозитории</td></tr>
+  <tr><td>GET</td><td><code>/users/{owner}/repos</code></td><td>Репозитории владельца</td></tr>
+  <tr><td>POST</td><td><code>/user/repos</code></td><td>Создать репозиторий</td></tr>
+  <tr><td>GET</td><td><code>/repos/{o}/{r}/actions/runners</code></td><td>Runner'ы репозитория</td></tr>
+  <tr><td>GET</td><td><code>/orgs/{org}/actions/runners</code></td><td>Runner'ы организации</td></tr>
+  <tr><td>POST</td><td><code>/repos/{o}/{r}/actions/runners/registration-token</code></td><td>Токен регистрации (repo)</td></tr>
+  <tr><td>POST</td><td><code>/orgs/{org}/actions/runners/registration-token</code></td><td>Токен регистрации (org)</td></tr>
+  <tr><td>POST</td><td><code>/repos/{o}/{r}/actions/runners/generate-jitconfig</code></td><td>JIT-конфиг</td></tr>
+  <tr><td>DELETE</td><td><code>/repos/{o}/{r}/actions/runners/{id}</code></td><td>Удалить runner</td></tr>
+  <tr><td>GET</td><td><code>/repos/{o}/{r}/actions/workflows</code></td><td>Workflows</td></tr>
+  <tr><td>GET</td><td><code>/repos/{o}/{r}/actions/runs</code></td><td>Запуски</td></tr>
+  <tr><td>POST</td><td><code>/repos/{o}/{r}/actions/workflows/{wf}/dispatches</code></td><td>Запуск workflow</td></tr>
+  <tr><td>POST</td><td><code>/repos/{o}/{r}/actions/runs/{id}/cancel</code></td><td>Отмена запуска</td></tr>
+  <tr><td>POST</td><td><code>/repos/{o}/{r}/actions/runs/{id}/rerun-failed-jobs</code></td><td>Перезапуск failed</td></tr>
+  <tr><td>GET</td><td><code>/repos/{o}/{r}/issues</code></td><td>Issues</td></tr>
+  <tr><td>POST</td><td><code>/repos/{o}/{r}/issues</code></td><td>Создать issue</td></tr>
+  <tr><td>GET</td><td><code>/repos/{o}/{r}/pulls</code></td><td>Pull requests</td></tr>
+  <tr><td>GET</td><td><code>/repos/{o}/{r}/actions/secrets</code></td><td>Список секретов</td></tr>
+  <tr><td>GET</td><td><code>/repos/{o}/{r}/actions/secrets/public-key</code></td><td>Публичный ключ</td></tr>
+  <tr><td>PUT</td><td><code>/repos/{o}/{r}/actions/secrets/{name}</code></td><td>Записать секрет</td></tr>
+  <tr><td>GET</td><td><code>/repos/actions/runner/releases/latest</code></td><td>Latest runner</td></tr>
+</table>
+<p>Локальные команды runner'а: <code>config.cmd</code>, <code>svc.cmd</code>, <code>run.cmd</code>.</p>
+
+<h2 id="faq">15. Устранение неполадок (FAQ)</h2>
+<table>
+  <tr><th>Вопрос</th><th>Ответ</th></tr>
+  <tr><td>Нужен ли Python на целевом ПК?</td><td>Нет — готовый <code>SHR.exe</code> (PyInstaller, onefile) самодостаточен.</td></tr>
+  <tr><td>Runner не виден на GitHub?</td><td>Проверьте: служба запущена (<code>sc query actions.runner</code>), метки совпадают с <code>runs-on</code>, токен регистрации не истёк (живёт ~1 час).</td></tr>
+  <tr><td>Ошибка 401 Bad credentials?</td><td>Токен неверный/истёк/отозван. Создайте новый PAT.</td></tr>
+  <tr><td>Ошибка 403 rate limit?</td><td>Подождите сброса (Дашборд → Rate limit) или используйте PAT с большим лимитом.</td></tr>
+  <tr><td>Ошибка 404 на runner-эндпоинтах?</td><td>У PAT нет прав <code>repo</code>/<code>admin:org</code>, или репозиторий приватный и токен без доступа.</td></tr>
+  <tr><td>Служба не устанавливается?</td><td>Запустите SHR от администратора. Проверьте, что runner распакован в папку с правами на запись.</td></tr>
+  <tr><td>Запросы не исполняются?</td><td>Они ждут подтверждения во вкладке «Запросы». Нажмите «Разрешить выбранный».</td></tr>
+  <tr><td>Как собрать на self-hosted runner?</td><td>В <code>build.yml</code> замените <code>runs-on: windows-latest</code> на <code>runs-on: [self-hosted, windows]</code> и установите runner по разделу 7.</td></tr>
+  <tr><td>Где логи?</td><td>Вкладка «Логи» + <code>%APPDATA%\SHR\shr.log</code>.</td></tr>
+  <tr><td>Сборка не запустилась в Actions?</td><td>Проверьте: workflow-файл на текущей ветке, триггеры без фильтра веток, вкладка Actions → последний запуск. Для ручного запуска используйте <strong>Run workflow</strong> или <code>gh workflow run build.yml --ref &lt;ветка&gt;</code>.</td></tr>
+</table>
+
+<h2 id="checklist">16. Чек-лист после установки</h2>
+<ul>
+  <li>[ ] PAT создан и сохранён в SHR (Настройки).</li>
+  <li>[ ] Подключение проверено («Подключено как &lt;login&gt;»).</li>
+  <li>[ ] Owner/repo по умолчанию заданы.</li>
+  <li>[ ] Runner скачан (вкладка Runner, статус «Установлен»).</li>
+  <li>[ ] Токен регистрации получен и runner зарегистрирован.</li>
+  <li>[ ] Служба запущена (<code>sc query actions.runner</code> → RUNNING).</li>
+  <li>[ ] Runner виден на GitHub как <code>online</code>.</li>
+  <li>[ ] Тестовый workflow с <code>runs-on: [self-hosted, windows]</code> выполнен локально.</li>
+  <li>[ ] Артефакты <code>SHR-windows-&lt;sha&gt;</code> и <code>SHR-Guide-&lt;sha&gt;</code> доступны в Actions.</li>
+</ul>
+
+<footer>
+  SHR v1.0.0 · MIT · Полный гайд (HTML) — единственная официальная документация.<br>
+  Дополнительно: <code>docs/ARCHITECTURE.md</code>, <code>docs/API_REFERENCE.md</code>, <code>docs/AUTOMATION.md</code>.
+</footer>
+
+</main>
+</div>
+
+<script>
+  // Подсветка активного пункта навигации
+  const links = document.querySelectorAll('nav a');
+  const sections = Array.from(document.querySelectorAll('main h2[id]'));
+  function onScroll() {
+    let current = '';
+    for (const s of sections) {
+      if (window.scrollY >= s.offsetTop - 120) current = s.id;
+    }
+    links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));
+  }
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  // Плавный скролл (у ya onclick не нужен)
+  links.forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    const el = document.querySelector(a.getAttribute('href'));
+    if (el) window.scrollTo({ top: el.offsetTop - 70, behavior: 'smooth' });
+  }));
+</script>
+</body>
+</html>
